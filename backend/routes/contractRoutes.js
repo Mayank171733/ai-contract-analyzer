@@ -4,16 +4,45 @@ const router = express.Router();
 const protect = require("../middleware/authMiddleware");
 const upload = require("../middleware/uploadMiddleware");
 
+
 const {
-  uploadContract,
-} = require("../controllers/contractController");
+    uploadContract,
+    getContracts,
+    getContract,
+    deleteContract
+}=require("../controllers/contractController");
 
 
+// Upload
 router.post(
-  "/upload",
-  protect,
-  upload.single("contract"),
-  uploadContract
+    "/upload",
+    protect,
+    upload.single("contract"),
+    uploadContract
+);
+
+
+// Get all contracts
+router.get(
+    "/",
+    protect,
+    getContracts
+);
+
+
+// Get one contract
+router.get(
+    "/:id",
+    protect,
+    getContract
+);
+
+
+// Delete contract
+router.delete(
+    "/:id",
+    protect,
+    deleteContract
 );
 
 

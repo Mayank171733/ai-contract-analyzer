@@ -4,15 +4,21 @@ const router = express.Router();
 const protect = require("../middleware/authMiddleware");
 
 const {
-    analyze
-}=require("../controllers/analysisController");
+  analyze,
+  getAnalysis,
+} = require("../controllers/analysisController");
 
 
 router.post(
-    "/:contractId",
-    protect,
-    analyze
+  "/:contractId",
+  protect,
+  analyze
 );
 
+router.get(
+  "/:contractId",
+  protect,
+  getAnalysis
+);
 
-module.exports=router;
+module.exports = router;
