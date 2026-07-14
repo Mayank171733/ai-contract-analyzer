@@ -10,8 +10,14 @@ const analyze = async (req, res) => {
 
         const { contractId } = req.params;
 
-
         const contract = await Contract.findById(contractId);
+
+        if (!contract) {
+            return res.status(404).json({
+                message: "Contract not found"
+            });
+        }
+
 
         if (
             contract.uploadedBy.toString() !==
@@ -19,13 +25,6 @@ const analyze = async (req, res) => {
         ) {
             return res.status(403).json({
                 message: "Unauthorized",
-            });
-        }
-
-
-        if (!contract) {
-            return res.status(404).json({
-                message: "Contract not found"
             });
         }
 
@@ -72,6 +71,13 @@ const getAnalysis = async (req, res) => {
         const analysis = await Analysis.findOne({
             contractId: req.params.contractId,
         });
+        const contract = await Contract.findById(req.params.contractId);
+
+        if (!contract) {
+            return res.status(404).json({
+                message: "Contract not found"
+            });
+        }
         if (
             contract.uploadedBy.toString() !==
             req.user._id.toString()

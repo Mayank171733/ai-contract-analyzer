@@ -1,37 +1,48 @@
 const mongoose = require("mongoose");
 
 
-const analysisSchema = new mongoose.Schema(
-{
+const analysisSchema = new mongoose.Schema({
+
     contractId:{
         type:mongoose.Schema.Types.ObjectId,
         ref:"Contract",
         required:true
     },
 
+
     summary:{
         type:String
     },
+
 
     riskScore:{
         type:Number
     },
 
+
     clauses:[
-        String
+        {
+            name:String,
+            description:String
+        }
     ],
+
 
     risks:[
-        String
+        {
+            description:String,
+            severity:String
+        }
     ],
 
+
     recommendations:[
-        String
+        {
+            description:String
+        }
     ]
 
-},
-{
-    timestamps:true
+
 });
 
 

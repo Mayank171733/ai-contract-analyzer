@@ -46,15 +46,6 @@ const getContracts = async (req, res) => {
             createdAt: -1
         });
 
-        if (
-            contract.uploadedBy.toString() !==
-            req.user._id.toString()
-        ) {
-            return res.status(403).json({
-                message: "Unauthorized",
-            });
-        }
-
         res.json({
             contracts
         });
@@ -73,30 +64,34 @@ const getContracts = async (req, res) => {
 
 // Get single contract
 const getContract = async (req, res) => {
-
     try {
-
-        const contract = await Contract.findById(
-            req.params.id
-        );
-
+        const contract = await Contract.findById(req.params.id);
 
         if (!contract) {
             return res.status(404).json({
-                message: "Contract not found"
+                message: "Contract not found",
             });
         }
 
+        // Check ownership
+        if (
+            contract.uploadedBy.toString() !==
+            req.user._id.toString()
+        ) {
+            return res.status(403).json({
+                message: "Unauthorized",
+            });
+        }
 
         res.json({
-            contract
+            contract,
         });
 
-
     } catch (error) {
+        console.log(error);
 
         res.status(500).json({
-            message: "Failed to fetch contract"
+            message: "Failed to fetch contract",
         });
     }
 };
