@@ -49,6 +49,7 @@ const analyze = async (req, res) => {
             recommendations: result.recommendations
         });
 
+        await Contract.findByIdAndUpdate(contract._id, { status: 'analyzed' });
 
         res.json({
             message: "Analysis completed",

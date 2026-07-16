@@ -38,6 +38,7 @@ const registerUser = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        profilePhoto: user.profilePhoto || "",
       },
     });
   } catch (error) {
@@ -97,6 +98,7 @@ const loginUser = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        profilePhoto: user.profilePhoto || "",
       },
     });
 
@@ -109,6 +111,137 @@ const loginUser = async (req, res) => {
   }
 };
 
+const updateProfile = async (req, res) => {
+  try {
+    const { name, profilePhoto } = req.body;
+    const userId = req.user?._id || req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+
+    const updates = {};
+
+    if (name !== undefined && name.trim() !== "") {
+      updates.name = name.trim();
+    }
+
+    if (profilePhoto !== undefined) {
+      updates.profilePhoto = profilePhoto;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ message: "No changes provided" });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(userId, updates, {
+      new: true,
+      runValidators: true,
+    }).select("-password");
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      message: "Profile updated successfully",
+      user: {
+        id: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        profilePhoto: updatedUser.profilePhoto || "",
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+const updateProfilePhoto = async (req, res) => {
+  try {
+    const userId = req.user?._id || req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ message: "No photo file provided" });
+    }
+
+    const baseUrl = process.env.BASE_URL || "http://localhost:3000";
+    const photoUrl = `${baseUrl}/uploads/profile-photos/${req.file.filename}`;
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { profilePhoto: photoUrl },
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      message: "Profile photo updated successfully",
+      user: {
+        id: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        profilePhoto: updatedUser.profilePhoto || "",
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+const updatePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+    const userId = req.user?._id || req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return res.status(400).json({ message: "Please fill all password fields" });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: "New password must be at least 6 characters" });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ message: "New password and confirmation do not match" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Current password is incorrect" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await User.findByIdAndUpdate(userId, { password: hashedPassword });
+
+    res.status(200).json({ message: "Password updated successfully" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
 module.exports = {
-  registerUser,loginUser,
+  registerUser,
+  loginUser,
+  updateProfile,
+  updateProfilePhoto,
+  updatePassword,
 };

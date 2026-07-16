@@ -1,31 +1,63 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import api, { getImageUrl } from '../services/api'
 
-const AuthContext = createContext();
+const AuthContext = createContext(null)
 
-export function AuthProvider({ children }) {
-  const [token, setToken] = useState(
-    localStorage.getItem("token") || ""
-  );
+const normalizeUser = (userData) => ({
+  ...userData,
+  profilePhoto: userData?.profilePhoto ? getImageUrl(userData.profilePhoto) : ''
+})
 
-  const login = (jwt) => {
-    localStorage.setItem("token", jwt);
-    setToken(jwt);
-  };
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user')
+    const token = localStorage.getItem('token')
+    if (storedUser && token) {
+      setUser(normalizeUser(JSON.parse(storedUser)))
+    }
+    setLoading(false)
+  }, [])
+
+  const login = async (email, password) => {
+    const response = await api.post('/auth/login', { email, password })
+    const normalizedUser = normalizeUser(response.data.user)
+    localStorage.setItem('token', response.data.token)
+    localStorage.setItem('user', JSON.stringify(normalizedUser))
+    setUser(normalizedUser)
+    return response.data
+  }
+
+  const register = async (name, email, password) => {
+    const response = await api.post('/auth/register', { name, email, password })
+    return response.data
+  }
+
+  const updateProfile = async (payload) => {
+    const response = await api.patch('/auth/profile', payload)
+    const updatedUser = normalizeUser(response.data.user)
+    localStorage.setItem('user', JSON.stringify(updatedUser))
+    setUser(updatedUser)
+    return response.data
+  }
+
+  const updateUser = (updatedUser) => {
+    const normalizedUser = normalizeUser(updatedUser)
+    localStorage.setItem('user', JSON.stringify(normalizedUser))
+    setUser(normalizedUser)
+  }
 
   const logout = () => {
-    localStorage.removeItem("token");
-    setToken("");
-  };
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    setUser(null)
+  }
 
-  return (
-    <AuthContext.Provider
-      value={{ token, login, logout }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  const value = useMemo(() => ({ user, loading, login, register, updateProfile, updateUser, logout }), [user, loading])
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
-export function useAuth() {
-  return useContext(AuthContext);
-}
+export const useAuth = () => useContext(AuthContext)

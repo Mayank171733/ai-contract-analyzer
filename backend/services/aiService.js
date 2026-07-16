@@ -8,6 +8,10 @@ const ai = new GoogleGenAI({
 
 const analyzeContract = async (contractText) => {
     try {
+        const isHindi = /[\u0900-\u097F]/.test(contractText);
+        const languageInstruction = isHindi
+            ? "Write the analysis in Hindi. Use Hindi language for summary, clauses, risks, and recommendations."
+            : "Write the analysis in English.";
 
         const prompt = `
 You are an AI Contract Analyzer.
@@ -18,6 +22,7 @@ IMPORTANT:
 Return ONLY valid JSON.
 Do NOT use markdown.
 Do NOT wrap the response in \`\`\`json.
+${languageInstruction}
 
 Format:
 
