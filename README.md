@@ -161,24 +161,6 @@ npm run dev
 
 ---
 
-## 📸 Screenshots
-
-Add screenshots here after deployment.
-
-Example:
-
-```
-Login Page
-
-Dashboard
-
-Upload Page
-
-Analysis Page
-```
-
----
-
 ## 🔄 Workflow
 
 ```
